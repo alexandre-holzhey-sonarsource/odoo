@@ -1,0 +1,36 @@
+name: trigger_auto_scan
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs: 
+  cron:
+    runs-on: ubuntu-latest
+    permissions:
+        contents: write 
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/checkout@v3
+      with:
+        repository: odoo/odoo
+        path: src
+
+    - uses: actions/checkout@v3
+      with:
+        repository: sonarresearchscanning/odoo
+        path: dst
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: push new data to repo
+      run: |
+        rm -rf src/.git src/.github
+        cp -af src/* dst/
+        cd dst
+        git config --global user.email 'autoscan@example.com'
+        git config --global user.name 'auto_scanner'
+        git add * &&  git commit -am "trigger autoscan" | grep '' && git push
